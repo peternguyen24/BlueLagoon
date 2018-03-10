@@ -26,7 +26,9 @@ class FrameProcessor:
 
 	def draw_final(self, frame, HD, BD):
 		origin_frame = frame
-		frame = self.remove_bg(frame, BD)
+		frame = self.remove_static_bg(frame, BD)
+		# frame = self.get_dynamic_fg(frame, BD)
+
 		hand_masked = image_analysis.apply_hist_mask(frame, HD.hand_hist)
 
 		contours = image_analysis.contours(hand_masked)
@@ -47,10 +49,15 @@ class FrameProcessor:
 		frame_final = np.vstack([origin_frame, hand_masked])
 		return frame_final
 
-	def remove_bg(self, frame, BD):
-		fg_mask = cv2.absdiff(frame, BD.background)
+	def remove_static_bg(self, frame, BD):
+		fg_mask = cv2.absdiff(frame, BD.static_background)
 		fg_mask = cv2.cvtColor(fg_mask, cv2.COLOR_BGR2GRAY)
 		ret, fg_mask = cv2.threshold(fg_mask,10,255,cv2.THRESH_BINARY)
+		frame = cv2.bitwise_and(frame, frame, mask=fg_mask)
+		return frame
+
+	def get_dynamic_fg(self, frame, BD):
+		fg_mask = BD.fgbg.apply(frame)
 		frame = cv2.bitwise_and(frame, frame, mask=fg_mask)
 		return frame
  
@@ -62,7 +69,6 @@ class FrameProcessor:
 				end = tuple(contour[e][0])
 				far = tuple(contour[f][0])               
 				cv2.circle(frame, start, 5, [255,0,255], -1)
-
 
 	def plot_farthest_point(self, frame, point):
 		cv2.circle(frame, point, 5, [0,0,255], -1)			
