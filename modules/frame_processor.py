@@ -24,7 +24,7 @@ class FrameProcessor:
 		flipped = cv2.flip(frame, 1)
 		return flipped	
 
-	def draw_final(self, frame, HD, BD):
+	def draw_final(self, frame, HD, BD, MD):
 		origin_frame = frame
 		frame = self.remove_static_bg(frame, BD)
 		# frame = self.get_dynamic_fg(frame, BD)
@@ -38,14 +38,16 @@ class FrameProcessor:
 			centroid = image_analysis.centroid(max_contour)
 			defects = image_analysis.defects(max_contour)
 
-			if centroid is not None and defects is not None and len(defects) > 0:   
+			if centroid is not None and defects is not None and len(defects) > 0:
 				farthest_point = image_analysis.farthest_point(defects, max_contour, centroid)
-
+				self.buffer_hand(centroid, MD)
 				if farthest_point is not None:
 					self.plot_farthest_point(origin_frame, farthest_point)
 					self.plot_hull(origin_frame, hull)
 					self.plot_centroid(origin_frame, centroid)
 
+		if self.is_motion(MD):
+			print ("is horizontal slide")
 		frame_final = np.vstack([origin_frame, hand_masked])
 		return frame_final
 
@@ -60,6 +62,12 @@ class FrameProcessor:
 		fg_mask = BD.fgbg.apply(frame)
 		frame = cv2.bitwise_and(frame, frame, mask=fg_mask)
 		return frame
+
+	def buffer_hand(self, centroid, MD):
+		MD.save_to_buffer(centroid)
+
+	def is_motion(self, MD):
+		return MD.match_motion()
  
 	def plot_defects(self, frame, defects, contour):
 		if len(defects) > 0:
