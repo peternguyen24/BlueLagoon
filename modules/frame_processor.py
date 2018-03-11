@@ -25,17 +25,9 @@ class FrameProcessor:
 		return flipped	
 
 	def draw_final(self, frame, HD, BD):
-		
-		origin_frame = frame.copy()
-		frame = self.remove_bg(frame, BD)
+		origin_frame = frame
+		frame = self.remove_static_bg(frame, BD)
 		hand_masked, bw_hand_masked = image_analysis.apply_hist_mask(frame, HD.hand_hist)
-
-		# Preprocess - redundant
-		# cv2.GaussianBlur(hand_masked, (5,5), 1)
-		# kernel = np.ones((5,5),np.uint8)
-		# cv2.morphologyEx(hand_masked, cv2.MORPH_OPEN, kernel)
-		# cv2.morphologyEx(hand_masked, cv2.MORPH_CLOSE, kernel)
-		#
 
 		contours = image_analysis.contours(hand_masked)
 		if contours is not None and len(contours) > 0:
@@ -58,10 +50,16 @@ class FrameProcessor:
 
 		frame_final = np.vstack([origin_frame, hand_masked])
 		return frame_final
-	def remove_bg(self, frame, BD):
-		fg_mask = cv2.absdiff(frame, BD.background)
+
+	def remove_static_bg(self, frame, BD):
+		fg_mask = cv2.absdiff(frame, BD.static_background)
 		fg_mask = cv2.cvtColor(fg_mask, cv2.COLOR_BGR2GRAY)
 		ret, fg_mask = cv2.threshold(fg_mask,10,255,cv2.THRESH_BINARY)
+		frame = cv2.bitwise_and(frame, frame, mask=fg_mask)
+		return frame
+
+	def get_dynamic_fg(self, frame, BD):
+		fg_mask = BD.fgbg.apply(frame)
 		frame = cv2.bitwise_and(frame, frame, mask=fg_mask)
 		return frame
  
@@ -73,7 +71,6 @@ class FrameProcessor:
 				end = tuple(contour[e][0])
 				far = tuple(contour[f][0])               
 				cv2.circle(frame, start, 5, [255,0,255], -1)
-
 
 	def plot_farthest_point(self, frame, point):
 		cv2.circle(frame, point, 5, [0,0,255], -1)			

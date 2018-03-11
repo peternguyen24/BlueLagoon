@@ -4,11 +4,15 @@ import numpy as np
 class BackgroundDetection:
 	def __init__(self):
 		self.trained_background = False
-		self.background = None
+		self.static_background = None
+		self.fgbg = cv2.createBackgroundSubtractorMOG2(500)
 
-	def train_background(self, frame):
+	def set_static_background(self, frame):
 		if frame is not None:
 			self.trained_background = True
-			self.background = frame
+			self.static_background = frame
+
+
+
 
 			

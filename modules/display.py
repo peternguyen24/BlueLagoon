@@ -34,7 +34,7 @@ def loop():
         elif keystroke == ord('b'):
             if not BD.trained_background:
                 print("Trained background")
-                BD.train_background(frame)
+                BD.set_static_background(frame)
         elif keystroke == 32:
             if not HD.trained_hand:
                 HD.train_hand(frame)
