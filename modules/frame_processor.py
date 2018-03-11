@@ -25,15 +25,26 @@ class FrameProcessor:
 		return flipped	
 
 	def draw_final(self, frame, HD, BD):
-		origin_frame = frame
+		
+		origin_frame = frame.copy()
 		frame = self.remove_bg(frame, BD)
-		hand_masked = image_analysis.apply_hist_mask(frame, HD.hand_hist)
+		hand_masked, bw_hand_masked = image_analysis.apply_hist_mask(frame, HD.hand_hist)
+
+		# Preprocess - redundant
+		# cv2.GaussianBlur(hand_masked, (5,5), 1)
+		# kernel = np.ones((5,5),np.uint8)
+		# cv2.morphologyEx(hand_masked, cv2.MORPH_OPEN, kernel)
+		# cv2.morphologyEx(hand_masked, cv2.MORPH_CLOSE, kernel)
+		#
 
 		contours = image_analysis.contours(hand_masked)
 		if contours is not None and len(contours) > 0:
 			max_contour = image_analysis.max_contour(contours)
+
+			palm_radius, palm_center = HD.find_palm(max_contour)
 			hull = image_analysis.hull(max_contour)
-			centroid = image_analysis.centroid(max_contour)
+			fingers = HD.find_fingers(hull, palm_center, palm_radius)
+			centroid = image_analysis.centroid(max_contour) # currently not use
 			defects = image_analysis.defects(max_contour)
 
 			if centroid is not None and defects is not None and len(defects) > 0:   
@@ -42,11 +53,11 @@ class FrameProcessor:
 				if farthest_point is not None:
 					self.plot_farthest_point(origin_frame, farthest_point)
 					self.plot_hull(origin_frame, hull)
-					self.plot_centroid(origin_frame, centroid)
+					self.plot_palm_circle(origin_frame, palm_center, palm_radius)
+					self.plot_fingers(origin_frame, fingers)
 
 		frame_final = np.vstack([origin_frame, hand_masked])
 		return frame_final
-
 	def remove_bg(self, frame, BD):
 		fg_mask = cv2.absdiff(frame, BD.background)
 		fg_mask = cv2.cvtColor(fg_mask, cv2.COLOR_BGR2GRAY)
@@ -75,6 +86,12 @@ class FrameProcessor:
 	def plot_hull(self, frame, hull):
 		cv2.drawContours(frame, [hull], 0, (255,0,0), 2)	
 
+	def plot_fingers(self, frame, fingers):
+		for i in range(len(fingers)):
+			cv2.circle(frame, (fingers[i][0],fingers[i][1]), 5, [255,0,0], -1)
 
 	def plot_contours(self, frame, contours):
 		cv2.drawContours(frame, contours, -1, (0,255,0), 3)				
+	def plot_palm_circle(self, frame, center, radius):
+		cv2.circle(frame, center, radius, [255,0,0], 2)
+		cv2.circle(frame, center, 5, [255,0,0], -1)
