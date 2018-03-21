@@ -29,11 +29,10 @@ def loop():
     BD = BackgroundDetection()
     HD = HandDetection()
     MD = MovementDetector()
-    print(camera.get(cv2.CAP_PROP_FPS))
 
     while(True):
         #start calc fps (at frame 150, sec 5 if fps is 30)
-        if counter == 100:
+        if counter == 10:
             start = time.time()
 
         #get_frame        
@@ -49,14 +48,6 @@ def loop():
         #final_frame 
         final_frame = frame.copy()
 
-        # end calc fps after
-        counter+=1
-        if counter == 150:
-            end = time.time()
-            fps = counter/(end-start)
-            MD.set_fps(fps)
-            print("fps set")
-
         keystroke = cv2.waitKey(30)
         if  keystroke == 27:
             break
@@ -67,11 +58,25 @@ def loop():
         elif keystroke == 32:
             if not HD.trained_hand:
                 HD.train_hand(frame)
+                start = time.time()
+                counter = 0
 
         if not HD.trained_hand:
             final_frame = HD.draw_hand_rect(final_frame)
         else:
-            final_frame = FP.draw_final(final_frame, HD, BD, MD)
+            final_frame = FP.draw_final(final_frame, HD, BD, MD, counter)
+
+        # end calc fps after
+        counter+=1
+        if counter == 50:
+            end = time.time()
+            fps = counter/(end-start)
+            MD.set_fps(fps)
+            print("fps set to: ", fps)
+
+        # reset frame counter for motion detection
+        if counter > 300:
+            counter = 0
 
         cv2.imshow('my webcam', final_frame)
     cv2.destroyAllWindows()

@@ -24,7 +24,7 @@ class FrameProcessor:
 		flipped = cv2.flip(frame, 1)
 		return flipped	
 
-	def draw_final(self, frame, HD, BD, MD):
+	def draw_final(self, frame, HD, BD, MD, frame_number):
 		origin_frame = frame
 		frame = self.remove_static_bg(frame, BD)
 		hand_masked, bw_hand_masked = image_analysis.apply_hist_mask(frame, HD.hand_hist)
@@ -41,7 +41,7 @@ class FrameProcessor:
 
 			if centroid is not None and defects is not None and len(defects) > 0:
 				farthest_point = image_analysis.farthest_point(defects, max_contour, centroid)
-				self.buffer_hand(centroid, MD)
+				self.buffer_hand(centroid, frame_number, MD)
 				if farthest_point is not None:
 					self.plot_farthest_point(origin_frame, farthest_point)
 					self.plot_hull(origin_frame, hull)
@@ -65,8 +65,9 @@ class FrameProcessor:
 		frame = cv2.bitwise_and(frame, frame, mask=fg_mask)
 		return frame
 
-	def buffer_hand(self, centroid, MD):
-		MD.save_to_buffer(centroid)
+	def buffer_hand(self, centroid, frame_number, MD):
+		# save motion every 1/4 sec, fps 
+		MD.save_to_buffer(centroid, frame_number)
 
 	def is_motion(self, MD):
 		return MD.match_motion()
