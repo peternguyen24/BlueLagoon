@@ -11,8 +11,9 @@ class MovementDetector:
 
 	def set_fps(self, fps):
 		self.fps = fps
-		self.saving_frame_interval = int ((fps+4) // 4) # save frame every 1/4 sec
-		self.max_index = int(fps // 2) if fps > 4 else 2# take 0.5 seconds of motion
+		saving_fps = 8
+		self.saving_frame_interval = int ((fps + saving_fps) // saving_fps) # save frame every 1/4 sec
+		self.max_index = int(saving_fps // 2) if fps > 4 else 2# take 0.5 seconds of motion
 		self.buffered_frames = np.zeros(self.max_index, dtype=(int,2))
 		self.current_index = 0
 		self.init = True
@@ -34,7 +35,6 @@ class MovementDetector:
 			print("current index: ", self.current_index)
 			print("buffered centroid coordinate")
 			print(self.buffered_frames)
-
 
 
 	def match_motion(self):
