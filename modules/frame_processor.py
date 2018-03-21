@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from . import image_analysis
+import win32api
 
 class FrameProcessor:
 	def __init__(self):
@@ -49,6 +50,7 @@ class FrameProcessor:
 					self.plot_fingers(origin_frame, fingers)
 
 		if self.is_motion(MD):
+			win32api.keybd_event(0xB0,0 , 0,0)
 			print ("is horizontal slide")
 		frame_final = np.vstack([origin_frame, hand_masked])
 		return frame_final

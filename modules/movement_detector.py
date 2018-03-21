@@ -73,4 +73,5 @@ class MovementDetector:
 			else:
 				detected = True
 
+		self.buffered_frames = np.zeros(self.max_index, dtype=(int,2))
 		return detected
