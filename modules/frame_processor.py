@@ -26,21 +26,20 @@ class FrameProcessor:
 
 	def draw_final(self, frame, HD, BD):
 		origin_frame = frame
-		frame = self.remove_static_bg(frame, BD)
-		hand_masked, bw_hand_masked = image_analysis.apply_hist_mask(frame, HD.hand_hist)
+		# frame = self.remove_static_bg(frame, BD)
+		hand_masked, bw= image_analysis.apply_hist_mask(frame, HD.hand_hist)
 
-		contours = image_analysis.contours(hand_masked)
-		if contours is not None and len(contours) > 0:
-			max_contour = image_analysis.max_contour(contours)
+		hand_contour, bw_hand_frame = self.extract_hand_contour(hand_masked)
 
-			palm_radius, palm_center = HD.find_palm(max_contour)
-			hull = image_analysis.hull(max_contour)
+		if hand_contour is not None:
+			palm_radius, palm_center = HD.find_palm(hand_contour)
+			hull = image_analysis.hull(hand_contour)
 			fingers = HD.find_fingers(hull, palm_center, palm_radius)
-			centroid = image_analysis.centroid(max_contour) # currently not use
-			defects = image_analysis.defects(max_contour)
+			centroid = image_analysis.centroid(hand_contour) # currently not use
+			defects = image_analysis.defects(hand_contour)
 
 			if centroid is not None and defects is not None and len(defects) > 0:   
-				farthest_point = image_analysis.farthest_point(defects, max_contour, centroid)
+				farthest_point = image_analysis.farthest_point(defects, hand_contour, centroid)
 
 				if farthest_point is not None:
 					self.plot_farthest_point(origin_frame, farthest_point)
@@ -48,8 +47,32 @@ class FrameProcessor:
 					self.plot_palm_circle(origin_frame, palm_center, palm_radius)
 					self.plot_fingers(origin_frame, fingers)
 
-		frame_final = np.vstack([origin_frame, hand_masked])
+		frame_final = np.vstack([origin_frame, bw])
 		return frame_final
+
+	def extract_hand_contour(self, frame):
+		max_contour = None
+		bw_frame = np.zeros((frame.shape[0],frame.shape[1],3), np.uint8)
+		
+		contours = image_analysis.contours(frame)
+		if contours is not None and len(contours) > 0:
+			max_contour = image_analysis.max_contour(contours)
+		cv2.drawContours(bw_frame, [max_contour], -1, (0,255,0), 3)
+		
+		# strengthen and lighten the contour
+		kernel = np.ones((5,5),np.uint8)
+		bw_frame = cv2.dilate(bw_frame,kernel,iterations = 1)
+		bw_frame = cv2.erode(bw_frame,kernel,iterations = 1)
+
+		contours = image_analysis.contours(bw_frame)
+		if contours is not None and len(contours) > 0:
+			max_contour = image_analysis.max_contour(contours)
+
+		return max_contour, bw_frame
+
+
+
+
 
 	def remove_static_bg(self, frame, BD):
 		fg_mask = cv2.absdiff(frame, BD.static_background)
