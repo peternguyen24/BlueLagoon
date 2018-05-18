@@ -67,7 +67,7 @@ class MovementDetector:
 			if y < current_y-200 or y > current_y+200:
 				print("y out")
 				return False
-			if x <= x_prev:
+			if x <= x_prev + 50:
 				print("x out: ", x, x_prev)
 				return False
 			else:

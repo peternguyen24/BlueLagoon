@@ -57,6 +57,8 @@ class HandDetection:
 		fingers = []
 		hullpoints = []
 		# Only take 1 point per cluster. cluster distance = 20 (^2=400)		
+		if(len(hull)==0):
+			return
 		for i in range(len(hull)):
 			dist2 = (hull[-i][0][0] - hull[-i+1][0][0])**2 + (hull[-i][0][1] - hull[-i+1][0][1])**2
 			if (dist2 > 400):
