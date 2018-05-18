@@ -39,29 +39,19 @@ class FrameProcessor:
 			centroid = image_analysis.centroid(hand_contour) # currently not use
 			defects = image_analysis.defects(hand_contour)
 
-<<<<<<< HEAD
 			if centroid is not None and defects is not None and len(defects) > 0:
 				farthest_point = image_analysis.farthest_point(defects, max_contour, centroid)
 				self.buffer_hand(centroid, frame_number, MD)
-=======
-			if centroid is not None and defects is not None and len(defects) > 0:   
-				farthest_point = image_analysis.farthest_point(defects, hand_contour, centroid)
-
->>>>>>> 4acf5f301e2163a53a083c23e5515d3f342e87eb
 				if farthest_point is not None:
 					self.plot_farthest_point(origin_frame, farthest_point)
 					self.plot_hull(origin_frame, hull)
 					self.plot_palm_circle(origin_frame, palm_center, palm_radius)
 					self.plot_fingers(origin_frame, fingers)
 
-<<<<<<< HEAD
 		if self.is_motion(MD):
 			win32api.keybd_event(0xB0,0 , 0,0)
 			print ("is horizontal slide")
 		frame_final = np.vstack([origin_frame, hand_masked])
-=======
-		frame_final = np.vstack([origin_frame, bw])
->>>>>>> 4acf5f301e2163a53a083c23e5515d3f342e87eb
 		return frame_final
 
 	def extract_hand_contour(self, frame):
